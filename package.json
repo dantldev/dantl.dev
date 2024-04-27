@@ -6,21 +6,104 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "commit": "cz"
   },
   "dependencies": {
+    "next": "14.2.3",
     "react": "^18",
-    "react-dom": "^18",
-    "next": "14.2.3"
+    "react-dom": "^18"
   },
   "devDependencies": {
-    "typescript": "^5",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "cz-emoji": "^1.3.1",
+    "commitizen": "^4.3.0",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.3",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-    "eslint": "^8",
-    "eslint-config-next": "14.2.3"
+    "typescript": "^5"
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-emoji"
+    },
+    "cz-emoji": {
+      "scopes": [
+        "content",
+        "design"
+      ],
+      "skipQuestions": ["issues", "breaking"],
+      "types": [
+        {
+          "emoji": "🌟",
+          "code": ":star2:",
+          "description": "A new feature",
+          "name": "feature"
+        },
+        {
+          "emoji": "🐛",
+          "code": ":bug:",
+          "description": "Fixing a bug.",
+          "name": "fix"
+        },
+        {
+          "emoji": "📝",
+          "code": ":pencil:",
+          "description": "Writing docs.",
+          "name": "docs"
+        },
+        {
+          "emoji": "🎨",
+          "code": ":art:",
+          "description": "Improving structure / format of the code.",
+          "name": "style"
+        },
+        {
+          "emoji": "💄",
+          "code": ":lipstick:",
+          "description": "Updating the UI and style files.",
+          "name": "ui"
+        },
+        {
+          "emoji": "✅",
+          "code": ":white_check_mark:",
+          "description": "Adding tests.",
+          "name": "test"
+        },
+        {
+          "emoji": "🚑",
+          "code": ":ambulance:",
+          "description": "Critical hotfix.",
+          "name": "hotfix"
+        },
+        {
+          "emoji": "💚",
+          "code": ":green_heart:",
+          "description": "Fixing CI Build.",
+          "name": "fix-ci"
+        },
+        {
+          "emoji": "♻️",
+          "code": ":recycle:",
+          "description": "Refactoring code.",
+          "name": "refactoring"
+        },
+        {
+          "emoji": "🌐",
+          "code": ":globe_with_meridians:",
+          "description": "Internationalization and localization.",
+          "name": "i18n"
+        },
+        {
+          "emoji": "⚡️",
+          "code": ":zap:",
+          "description": "Improving performance.",
+          "name": "perf"
+        }
+      ]
+    }
   }
 }
