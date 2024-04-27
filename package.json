@@ -32,6 +32,7 @@
     },
     "cz-emoji": {
       "scopes": [
+        "v1",
         "content",
         "design"
       ],
