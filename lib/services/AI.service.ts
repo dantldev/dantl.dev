@@ -3,7 +3,7 @@ import Groq from "groq-sdk";
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
 interface AiMessage {
-  role: 'user' | 'assistant';
+  role: 'user' | 'assistant' | 'system';
   content: string;
 }
 
@@ -27,12 +27,7 @@ async function groqClient(messages: AiMessage[], model?: string) {
   const _model = model || 'mixtral-8x7b-32768';
 
   return groq.chat.completions.create({
-    messages: [
-      {
-        role: "user",
-        content: "Explain the importance of fast language models",
-      },
-    ],
+    messages,
     model: _model,
   });
 }
