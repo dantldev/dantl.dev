@@ -66,7 +66,8 @@ export async function POST(request: NextRequest) {
           }
         ]
       );
-
+      console.log('aiResponse', aiResponse)
+      console.log('message', message)
       if (aiResponse) {
         await telegramService.sendMessage({
           chatId: String(message.chat.id),
