@@ -38,7 +38,7 @@ async function groqClient(messages: AiMessage[], model?: string) {
 }
 
 class AIService {
-  client: AIClient;
+  client: typeof groqClient;
 
   constructor(client: AIClient) {
     this.client = client;
@@ -47,11 +47,12 @@ class AIService {
   async getCompletion(messages: AiMessage[], model?: string) {
     try {
       const completion = await this.client(messages, model);
-      return completion;
+
+      return completion.choices[0].message.content;
     } catch (error) {
       console.error('Error fetching AI response:', error);
     }
   }
 }
 
-export const aiService = new AIService(groqClient as unknown as AIClient);
+export const aiService = new AIService(groqClient);
