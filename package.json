@@ -11,8 +11,12 @@
   },
   "dependencies": {
     "@vercel/functions": "^1.0.2",
+    "@vercel/kv": "^2.0.0",
     "axios": "^1.7.2",
+    "dotenv": "^16.4.5",
     "groq-sdk": "^0.4.0",
+    "ioredis": "^5.4.1",
+    "jwt-simple": "^0.5.6",
     "next": "14.2.3",
     "react": "^18",
     "react-dom": "^18"

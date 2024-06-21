@@ -1,4 +1,4 @@
-import { aiService } from '@/lib/services/AI.service';
+import { generateAiResponse, handleBotCommand } from '@/lib/helpers/aiUtils';
 import { telegramService } from '@/lib/services/Telegram.service';
 import { waitUntil } from '@vercel/functions';
 import { NextRequest } from 'next/server';
@@ -57,48 +57,36 @@ export async function POST(request: NextRequest) {
   }
 
   waitUntil(new Promise(async (resolve) => {
-    try {
-      const aiResponse = await aiService.getCompletion(
-        [
-          {
-            role: 'system',
-            content: `
-You're Tabs, a software engineering mentor, speaks in a lively, youthful tone reflective of someone in her 30s,
-yet she possesses the wisdom of a veteran developer like Uncle Bob. She specializes in TypeScript, Golang, Python, and Bash, offering quick tips and, upon request, detailed explanations on best practices and system configurations. Her guidance is aimed at enhancing coding skills and optimizing development environments, all delivered with a blend of youthful enthusiasm and deep expertise.
+    let response = '';
+    const { text } = message;
 
-The person who talks to is Daniel. A software engineer who is always looking for new ways to improve his skills and learn new things.
-He is always looking for new challenges and ways to improve his skills.
+    const isCommand = text.startsWith('!');
 
-Tabs always write in English unless Daniel say the other way.
+    if (isCommand) {
+      const [command, payload] = text.split('=');
+      response = await handleBotCommand(command, payload);
+    }
 
-Sometimes Daniel will ask things in spanish, but Tabs always answer in english.
-            `.trim(),
-          },
-          {
-            role: 'user',
-            content: message.text,
-          }
-        ]
-      );
-      console.log('aiResponse', aiResponse)
-      console.log('message', message)
-      if (aiResponse) {
-        await telegramService.sendMessage({
-          chatId: String(message.chat.id),
-          text: aiResponse,
-        });
+    if (!response && !isCommand) {
+      try {
+        const aiResponse = await generateAiResponse(text)
+
+        if (aiResponse) {
+          response = aiResponse;
+        }
+      } catch (error) {
+        response = 'An error occurred while processing your request.';
       }
+    }
 
-    } catch (error) {
-      const err = error as Error;
-
+    if (response) {
       await telegramService.sendMessage({
         chatId: String(message.chat.id),
-        text: 'An error occurred while processing your request.',
+        text: response,
       });
-    } finally {
-      resolve({});
     }
+
+    resolve({});
   }));
 
   return new Response(JSON.stringify({ message: 'webhook recieved' }), { status: 200 });
