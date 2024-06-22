@@ -25,12 +25,12 @@ type AIClient = (messages: AiMessage[], model?: string) => Promise<any>;
  */
 
 async function groqClient(messages: AiMessage[], model?: string) {
-  const _model = model || 'mixtral-8x7b-32768';
+  const _model = model || 'llama3-70b-8192';
 
   return groq.chat.completions.create({
     messages,
     model: _model,
-    temperature: 1.2
+    temperature: 1
   });
 }
 
