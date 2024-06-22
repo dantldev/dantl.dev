@@ -1,6 +1,7 @@
 import Groq from "groq-sdk";
+import { config } from "../config";
 
-const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+const groq = new Groq({ apiKey: config.groq_api_key });
 
 export interface AiMessage {
   role: 'user' | 'assistant' | 'system';
@@ -29,8 +30,7 @@ async function groqClient(messages: AiMessage[], model?: string) {
   return groq.chat.completions.create({
     messages,
     model: _model,
-    max_tokens: 32768,
-    temperature: 0.87
+    temperature: 1.2
   });
 }
 

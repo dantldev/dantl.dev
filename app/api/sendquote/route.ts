@@ -1,3 +1,4 @@
+import { config } from '@/lib/config';
 import axios from 'axios';
 import { NextRequest } from 'next/server';
 
@@ -12,13 +13,11 @@ const fetchQuote = async () => {
 };
 
 const sendTelegramMessage = async (message: string) => {
-  const telegramApiKey = process.env.TELEGRAM_API_KEY;
-  const telegramChatId = process.env.TELEGRAM_CHAT_ID;
-  const url = `https://api.telegram.org/bot${telegramApiKey}/sendMessage`;
+  const url = `https://api.telegram.org/bot${config.telegram_api_key}/sendMessage`;
 
   try {
     await axios.post(url, {
-      chat_id: telegramChatId,
+      chat_id: config.telegram_app_id,
       text: message,
     });
   } catch (error) {

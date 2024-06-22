@@ -1,9 +1,10 @@
 import axios, { AxiosInstance } from 'axios';
 import { handleAxiosError } from '../helpers/handleAxiosError';
+import { config } from '../config';
 
 
 const TelegramClient = axios.create({
-  baseURL: `https://api.telegram.org/bot${process.env.TELEGRAM_API_KEY}`
+  baseURL: `https://api.telegram.org/bot${config.telegram_api_key}`
 });
 
 class TelegramService {

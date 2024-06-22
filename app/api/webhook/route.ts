@@ -1,41 +1,12 @@
+import { config } from '@/lib/config';
 import { generateAiResponse, handleBotCommand } from '@/lib/helpers/aiUtils';
 import { telegramService } from '@/lib/services/Telegram.service';
 import { waitUntil } from '@vercel/functions';
 import { NextRequest } from 'next/server';
 
-const WHITELISTED_USERS = (process.env.WHITELISTED_USERS || '').split(',');
-
-interface WebhookBody {
-    update_id: number;
-    message: {
-      message_id: number;
-      from: {
-        id: number;
-        is_bot: false;
-        first_name: string;
-        last_name: string;
-        username: string;
-        language_code: 'en' | string;
-      },
-      chat: {
-        id: number,
-        first_name: string,
-        last_name: string,
-        username: string,
-        type: 'private' | 'public'
-      },
-      date: string,
-      text: string;
-    }
-  }
-
-if (!WHITELISTED_USERS) {
-  throw new Error('Please provide a comma-separated list of whitelisted users in the WHITELISTED_USERS environment variable.');
-}
-
 async function validateWhitelistedUser(message: WebhookBody['message']) {
   const { from } = message;
-  if (from?.username && !WHITELISTED_USERS.includes(from.username)) {
+  if (from?.username && !config.whitelist.includes(from.username)) {
     throw new Error('User is not authorized to use this bot.');
   }
 }
