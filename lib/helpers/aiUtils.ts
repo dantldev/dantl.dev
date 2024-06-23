@@ -172,9 +172,9 @@ const botCommands = {
   '!softreset': async () => {
     const botname = await botUtils.getCurrentProfile();
 
-    // ensure context saving
-    await botUtils.getConversationContext(botname);
     const history = await botUtils.getConversationHistory(botname);
+    const summary = await botUtils.summarizeConversation(botname, history);
+    await botUtils.setConversationContext(botname, summary as string);
     // leave the last 2 messages
     await botUtils.setConversationHistory(botname, history.slice(-2, history.length));
 
