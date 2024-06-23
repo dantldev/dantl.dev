@@ -82,6 +82,7 @@ The base emotional_intelligence interface is as follows:
   "love": {{number}},
   "hate": {{number}},
   "trust": {{number}},
+  "arousal_level": {{number}},
 }
         
 Return a JSON object with the emotional intelligence values that the assistant should adopt.
