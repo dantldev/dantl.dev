@@ -66,7 +66,9 @@ export const botUtils = {
 Your role is to evaluate the emotional intelligence values that the assistant talking
 should adopt in order to generate engaging and contextually relevant responses.
 
-Values should be between 0 and 1
+Values should be between 0 and 1 being 0 no presence of the emotion and 1 the maximum presence of the emotion.
+
+You always should return ALL the emotional intelligence values, even if they are not present in the conversation or if they are 0.
 
 The base emotional_intelligence interface is as follows:
 {
@@ -82,7 +84,7 @@ The base emotional_intelligence interface is as follows:
   "love": {{number}},
   "hate": {{number}},
   "trust": {{number}},
-  "arousal_level": {{number}},
+  "arousal": {{number}},
 }
         
 Return a JSON object with the emotional intelligence values that the assistant should adopt.
@@ -93,7 +95,7 @@ Return a JSON object with the emotional intelligence values that the assistant s
         content: messages.map(x => `FROM: ${x.role}: ${x.content}`).join('\n'),
       }
     ], {
-      model: MODELS.llama3_8b_8192,
+      model: MODELS.mixtral_8x7b_32768,
       response_format: {
         type: 'json_object'
       }
