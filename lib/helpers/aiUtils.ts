@@ -169,12 +169,21 @@ const botCommands = {
 
     return 'Generated summary:\n\n' + summary;
   },
+  '!softreset': async () => {
+    const botname = await botUtils.getCurrentProfile();
+
+    // ensure context saving
+    await botUtils.getConversationContext(botname);
+    const history = await botUtils.getConversationHistory(botname);
+    // leave the last 2 messages
+    await botUtils.setConversationHistory(botname, history.slice(-2, history.length));
+
+    return 'Memory purged, leaving the last 2 messages. Context saved.'
+  },
   '!reset': async (args: CommandFunctionArguments) => {
     const { payload } = args;
 
     const botname = await botUtils.getCurrentProfile();
-
-
     if (payload) {
       const numberOfMessageToDelete = parseInt(payload);
 
@@ -237,13 +246,28 @@ export const generateAiResponse = async (message: string) => {
   ];
   // console.log(messages)
   // console.log('longitud arr: ',messages.length)
-  const response = await aiService.getCompletion([
-    {
-      role: 'system',
-      content: systemMessage,
-    },
-    ...messages,
-  ]);
+  let response;
+
+  try {
+    response = await aiService.getCompletion([
+      {
+        role: 'system',
+        content: systemMessage,
+      },
+      ...messages,
+    ]);
+  } catch (error) {
+    response = await aiService.getCompletion([
+      {
+        role: 'system',
+        content: systemMessage,
+      },
+      ...messages,
+    ], {
+      model: MODELS.mixtral_8x7b_32768,
+    });
+    response += '\n\n-- using fallback model --\n\n'
+  }
 
   if (messages.length >= 14) {
     // console.log('limit reached, summarizing conversation')
