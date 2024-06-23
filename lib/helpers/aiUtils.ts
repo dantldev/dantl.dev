@@ -17,11 +17,10 @@ export const botUtils = {
     if (!ctx) return '';
 
     return `
-    Este texto encerrado con el "namespace" "conversationcontext" es un resumen
-    de tu conversación con Daniel. Internamente usas esto para "recordar" eventos
-    pasados en la conversación.
-
-    namespace conversationcontext {
+    namespace previus_conversations_context {
+      use_case: You can use this context to "remember" previous conversations,
+      "remembering" the context of previous messages can help you to 
+      generate engaging and contextually relevant responses.
       context: """${ctx}"""
     }
     `
@@ -31,23 +30,14 @@ export const botUtils = {
       {
         role: 'system',
         content: `
-        Eres un asistente de IA que ayuda a resumir conversaciones.
-        Tus resumenes deben ser detallados y precisos. Serán utilizados
-        para ayudar a otros LLMs a entender conversaciones pasadas.
-
-        Debes usar el español para resumir conversaciones.
-        `.trim(),
-      },
-      {
-        role: 'assistant',
-        content: `
-        Perfecto, envíame el mensaje que quieres que resuma y te responderé
-        con el resumen.
+        Your role is to generate content rich summaries of a given conversation.
+        Your summary will be used as a context for future conversations.
+        Your summary should be from the point of view of the ASSISTANT.
         `.trim(),
       },
       {
         role: 'user',
-        content: messages.map(x => `MENSAJE DE: ${x.role}: ${x.content}`).join('\n'),
+        content: messages.map(x => `FROM: ${x.role}: ${x.content}`).join('\n'),
       }
     ]);
 
@@ -93,6 +83,17 @@ const botCommands = {
 
     return await botUtils.getConversationContext(botname);
   },
+  '!remember': async () => {
+    const botname = await botUtils.getCurrentProfile();
+    const history = await botUtils.getConversationHistory(botname);
+    const summary = await botUtils.summarizeConversation(botname, history);
+
+    if (summary) {
+      await botUtils.setConversationContext(botname, summary);
+    }
+
+    return 'Generated summary:\n\n' + summary;
+  },
   '!reset': async (args: CommandFunctionArguments) => {
     const { payload } = args;
 
@@ -128,13 +129,11 @@ export const handleBotCommand = async (command: string, payload: string) => {
 export const generateAiResponse = async (message: string) => {
   const botname = await botUtils.getCurrentProfile();
   // console.log("botname", botname) 
-  const systemMessage = `
-    ${await botUtils.getSystemMessage(botname)}
-    ${await botUtils.getConversationContext(botname)}
-  `;
+  const context = await botUtils.getConversationContext(botname);
+  let systemMessage = (await botUtils.getSystemMessage(botname)).replace('{{context}}', context);
+  systemMessage += `\n\n-- init ${botname} program --\n\n`
 
   // console.log('ctx: ',await botUtils.getConversationContext(botname))
-
   const history = await botUtils.getConversationHistory(botname);
 
   const messages: AiMessage[] = [
