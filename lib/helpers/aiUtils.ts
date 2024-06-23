@@ -177,11 +177,18 @@ const botCommands = {
 
     if (payload) {
       const numberOfMessageToDelete = parseInt(payload);
-      const currentHistory = await botUtils.getConversationHistory(botname);
 
-      await botUtils.setConversationHistory(botname, currentHistory.slice(0, -numberOfMessageToDelete));
+      if (numberOfMessageToDelete < 1) {
+        const currentHistory = await botUtils.getConversationHistory(botname);
 
-      return `Deleted ${numberOfMessageToDelete} messages from the conversation history.`
+        await botUtils.setConversationHistory(botname, currentHistory.slice(2, currentHistory.length));
+      } else {
+        const currentHistory = await botUtils.getConversationHistory(botname);
+
+        await botUtils.setConversationHistory(botname, currentHistory.slice(0, -numberOfMessageToDelete));
+
+        return `Deleted ${numberOfMessageToDelete} messages from the conversation history.`
+      }
     } else {
       await botUtils.setConversationContext(botname, '');
       await botUtils.setConversationHistory(botname, []);
