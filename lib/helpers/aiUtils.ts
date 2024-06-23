@@ -88,6 +88,11 @@ const botCommands = {
 
     return 'Profile set successfully to ' + botname;
   },
+  '!context': async () => {
+    const botname = await botUtils.getCurrentProfile();
+
+    return await botUtils.getConversationContext(botname);
+  },
   '!reset': async (args: CommandFunctionArguments) => {
     const { payload } = args;
 
