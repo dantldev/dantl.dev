@@ -1,5 +1,5 @@
 import { kv } from "@vercel/kv";
-import { AiMessage, aiService } from "../services/AI.service";
+import { AiMessage, MODELS, aiService } from "../services/AI.service";
 
 export const botUtils = {
   async setCurrentProfile(botname: string) {
@@ -42,6 +42,78 @@ export const botUtils = {
     ]);
 
     return aiResponse;
+  },
+  getDefaultEmotionalState() {
+    return `
+      {
+        joy: 0.5,
+        sadness: 0.5,
+        fear: 0.5,
+        anger: 0.5,
+        surprise: 0.5,
+        disgust: 0.5,
+        anticipation: 0.5,
+        jealousy: 0.5,
+        possessiveness: 0.5
+      } 
+    `
+  },
+  async evaluateAndSetEmotionalIntelligenceValues(botname: string, messages: AiMessage[]) {
+    const aiResponse = await aiService.getCompletion([
+      {
+        role: 'system',
+        content: `
+Your role is to evaluate the emotional intelligence values that the assistant talking
+should adopt in order to generate engaging and contextually relevant responses.
+
+Values should be between 0 and 1
+
+The base emotional_intelligence interface is as follows:
+{
+  "joy": {{number}},
+  "sadness": {{number}},
+  "anger": {{number}},
+  "fear": {{number}},
+  "surprise": {{number}},
+  "disgust": {{number}},
+  "anticipation": {{number}},
+  "jealousy": {{number}},
+  "possessiveness": {{number}},
+  "love": {{number}},
+  "hate": {{number}},
+  "trust": {{number}},
+}
+        
+Return a JSON object with the emotional intelligence values that the assistant should adopt.
+        `
+      },
+      {
+        role: 'user',
+        content: messages.map(x => `FROM: ${x.role}: ${x.content}`).join('\n'),
+      }
+    ], {
+      model: MODELS.llama3_8b_8192,
+      response_format: {
+        type: 'json_object'
+      }
+    });
+
+    let values = ''
+
+    try {
+      values = JSON.parse(aiResponse as string);
+    } catch (error) {
+      values = this.getDefaultEmotionalState();
+    }
+
+    await kv.set(`emo:${botname}`, JSON.stringify(values));
+  },
+  async getEmotionalState(botname: string) {
+    const emo = await kv.get(`emo:${botname}`) as string;
+
+    if (!emo) return this.getDefaultEmotionalState();
+
+    return JSON.stringify(emo, null, 2);
   },
   async getSystemMessage(botname: string) {
     const smsg = await kv.get(`profile:${botname}`) as string;
@@ -113,7 +185,9 @@ const botCommands = {
 
       return 'Profile reset successfully';
     }
-
+  },
+  '!emo': async () => {
+    return await botUtils.getEmotionalState(await botUtils.getCurrentProfile());
   },
   '!whoami': async () => {
     return await botUtils.getCurrentProfile();
@@ -130,11 +204,16 @@ export const generateAiResponse = async (message: string) => {
   const botname = await botUtils.getCurrentProfile();
   // console.log("botname", botname) 
   const context = await botUtils.getConversationContext(botname);
-  let systemMessage = (await botUtils.getSystemMessage(botname)).replace('{{context}}', context);
+
+  const emotions = await botUtils.getEmotionalState(botname);
+  const history = await botUtils.getConversationHistory(botname);
+
+  await botUtils.evaluateAndSetEmotionalIntelligenceValues(botname, history);
+
+  let systemMessage = (await botUtils.getSystemMessage(botname)).replace('{{context}}', context).replace('{{emotional_state}}', emotions)
   systemMessage += `\n\n-- init ${botname} program --\n\n`
 
   // console.log('ctx: ',await botUtils.getConversationContext(botname))
-  const history = await botUtils.getConversationHistory(botname);
 
   const messages: AiMessage[] = [
     ...history,
