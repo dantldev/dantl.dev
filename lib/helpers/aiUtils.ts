@@ -18,10 +18,10 @@ export const botUtils = {
 
     return `
     namespace previus_conversations_context {
-      use_case: You can use this context to "remember" previous conversations,
+      use_case: You can use this context to "remember" previous event on this conversation,
       "remembering" the context of previous messages can help you to 
       generate engaging and contextually relevant responses.
-      context: """${ctx}"""
+      context: """\n${ctx}\n"""
     }
     `
   },
@@ -42,7 +42,10 @@ export const botUtils = {
       },
       {
         role: 'user',
-        content: messages.map(x => `FROM: ${x.role}: ${x.content}`).join('\n'),
+        content: messages.map(x => {
+          const from = x.role === 'user' ? 'Daniel' : botname;
+          return `- ${from}: ${x.content}`
+        }).join('\n'),
       }
     ], {
       model: MODELS.mixtral_8x7b_32768
