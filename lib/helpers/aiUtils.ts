@@ -323,7 +323,7 @@ export const generateAiResponse = async (message: string) => {
     -- current emotional state --
     ${emotions}
 
-    !newMessageFrom(daniel)
+    !newMessageFrom(daniel) at ${new Date().toISOString()}
 
     -- init ${botname} program --
     `
