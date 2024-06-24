@@ -33,13 +33,20 @@ export const botUtils = {
         Your role is to generate content rich summaries of a given conversation.
         Your summary will be used as a context for future conversations.
         Your summary should be from the point of view of the ASSISTANT.
+
+        FORMAT:
+        {{meaningfull title}}
+        {{sumary}}
+        {{searchable keywords separeted by comma}}
         `.trim(),
       },
       {
         role: 'user',
         content: messages.map(x => `FROM: ${x.role}: ${x.content}`).join('\n'),
       }
-    ]);
+    ], {
+      model: MODELS.mixtral_8x7b_32768
+    });
 
     return aiResponse;
   },
@@ -222,20 +229,92 @@ export const handleBotCommand = async (command: string, payload: string) => {
   return response;
 }
 
+async function retryAiCall<T>(fn: (model: string) => Promise<T>, model: string, retries = 3,): Promise<T> {
+  let _model = model || MODELS.llama3_70b_8192;
+
+  try {
+    return await fn(_model);
+  } catch (error) {
+    if (retries === 2) {
+      _model = MODELS.mixtral_8x7b_32768;
+    }
+
+    if (retries === 1) {
+      _model = MODELS.gemma_7b_it;
+    }
+
+    if (retries === 0) {
+      throw error;
+    }
+
+    return await retryAiCall(fn, _model, retries - 1);
+  }
+}
+
 export const generateAiResponse = async (message: string) => {
-  const botname = await botUtils.getCurrentProfile();
+  let botname = '';
+  let response = '';
+  let falbackUsed = '';
+  let context = '';
+  let emotions = '';
+  let history = [];
+  let system_message = '';
+
+  try {
+    botname = await botUtils.getCurrentProfile();
+  } catch (error) {
+    response = 'Error getting current profile.'
+    return response;
+  }
   // console.log("botname", botname) 
-  const context = await botUtils.getConversationContext(botname);
+  try {
+    context = await botUtils.getConversationContext(botname);
+  } catch (error) {
+    response = 'Error getting conversation context.'
+    return response;
+  }
 
-  const emotions = await botUtils.getEmotionalState(botname);
-  const history = await botUtils.getConversationHistory(botname);
+  try {
+    emotions = await botUtils.getEmotionalState(botname);
+  } catch (error) {
+    response = 'Error getting emotional state.'
+    return response;    
+  }
 
-  await botUtils.evaluateAndSetEmotionalIntelligenceValues(botname, history);
+  try {
+    history = await botUtils.getConversationHistory(botname);
+  } catch (error) {
+    response = 'Error getting conversation history.'
+    return response;    
+  }
 
-  let systemMessage = (await botUtils.getSystemMessage(botname)).replace('{{context}}', context).replace('{{emotional_state}}', emotions)
-  systemMessage += `\n\n-- init ${botname} program --\n\n`
+  try {
+    await botUtils.evaluateAndSetEmotionalIntelligenceValues(botname, history);
+  } catch (error) {
+    response = 'Error evaluating emotional intelligence values.'
+    return response;    
+  }
 
-  // console.log('ctx: ',await botUtils.getConversationContext(botname))
+  try {
+    system_message = await botUtils.getSystemMessage(botname);
+    system_message = system_message.replace('{{context}}', context)
+  } catch (error) {
+    response = 'Error getting system message.'
+    return response;    
+  }
+
+  function getContextualData(botname: string) {
+    return `
+    ${context}
+
+    -- current emotional state --
+    ${emotions}
+
+    !newMessageFrom(daniel)
+
+    -- init ${botname} program --
+    `
+  }
 
   const messages: AiMessage[] = [
     ...history,
@@ -244,35 +323,36 @@ export const generateAiResponse = async (message: string) => {
       content: message,
     }
   ];
-  // console.log(messages)
-  // console.log('longitud arr: ',messages.length)
-  let response;
 
   try {
-    response = await aiService.getCompletion([
-      {
-        role: 'system',
-        content: systemMessage,
-      },
-      ...messages,
-    ]);
+    const defaultModel = MODELS.llama3_70b_8192;
+
+    await retryAiCall(async (model) => {
+      response = await aiService.getCompletion([
+        {
+          role: 'system',
+          content: system_message,
+        },
+        {
+          role: 'system',
+          content: getContextualData(botname),
+        },
+        ...messages,
+      ], {
+        model,
+      }) as string;
+
+      if (model !== defaultModel) {
+        falbackUsed = model;
+      }
+    }, MODELS.llama3_70b_8192);
   } catch (error) {
-    response = await aiService.getCompletion([
-      {
-        role: 'system',
-        content: systemMessage,
-      },
-      ...messages,
-    ], {
-      model: MODELS.mixtral_8x7b_32768,
-    });
-    response += '\n\n-- using fallback model --\n\n'
+    response = 'Failed to generate response';
   }
 
   if (messages.length >= 14) {
-    // console.log('limit reached, summarizing conversation')
     const summary = await botUtils.summarizeConversation(botname, messages);
-    // console.log('summary', summary)
+
     if (summary) {
       await botUtils.setConversationHistory(botname, []);
       await botUtils.setConversationContext(botname, summary);
@@ -284,5 +364,9 @@ export const generateAiResponse = async (message: string) => {
     }]);
   }
 
-  return response;
+  if (falbackUsed) {
+    response += `\n\n-- fallback model used: ${falbackUsed} --\n\n`
+  }
+
+  return response as string;
 }

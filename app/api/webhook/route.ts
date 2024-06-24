@@ -57,6 +57,13 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    if (!response) {
+      await telegramService.sendMessage({
+        chatId: String(message.chat.id),
+        text: 'ERROR 0042',
+      });
+    }
+
     resolve({});
   }));
 
