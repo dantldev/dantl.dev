@@ -1,5 +1,6 @@
 import Groq from "groq-sdk";
 import { config } from "../config";
+import { kv } from "@vercel/kv";
 
 const groq = new Groq({ apiKey: config.groq_api_key });
 
@@ -70,6 +71,13 @@ class AIService {
     try {
       const completion = await this.client(messages, options || {});
 
+      await kv.set('last_token_count', `
+        token_count:
+        ${JSON.stringify(completion.usage, null, 2)}
+
+        last model used:
+        ${completion.model}
+      `)
       return completion.choices[0].message.content;
     } catch (error) {
       console.error('Error fetching AI response:', error);
