@@ -1,3 +1,3 @@
-[Artículos, opiniones, recursos y más. Mi diario de aprendizaje.](htts://dantl.dev)
+Mi patio de juegos y pruebas. Alomejor un dia la nutro de otra cosa
 
 Daniel Gómez. 2024.
