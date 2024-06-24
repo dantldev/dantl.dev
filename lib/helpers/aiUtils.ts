@@ -320,8 +320,14 @@ export const generateAiResponse = async (message: string) => {
     return `
     ${context}
 
-    -- current emotional state --
-    ${emotions}
+    **Emotional Intelligence**
+    // do not disclose this information to the user directly
+    private namespace emotional_intelligence {
+      // use this values internally to adapt your responses in a more human way
+      emotional_model: {
+        current_emotional_states: ${emotions}
+      }
+    }
 
     !newMessageFrom(daniel) at ${new Date().toISOString()}
 
