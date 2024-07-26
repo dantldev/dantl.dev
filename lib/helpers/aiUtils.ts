@@ -347,7 +347,7 @@ export const generateAiResponse = async (message: string) => {
   ];
 
   try {
-    const defaultModel = MODELS.llama3_70b_8192;
+    const defaultModel = MODELS.llama3170b;
 
     await retryAiCall(async (model) => {
       response = await aiService.getCompletion([

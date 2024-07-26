@@ -24,6 +24,7 @@ export const MODELS = {
   llama3_8b_8192: 'llama3-8b-8192',
   llama3_70b_8192: 'llama3-70b-8192',
   mixtral_8x7b_32768: 'mixtral-8x7b-32768',
+  llama3170b: 'llama-3.1-70b-versatile',
   gemma_7b_it: 'gemma-7b-it',
 } as const;
 
@@ -44,7 +45,7 @@ export const MODELS = {
 async function groqClient(messages: AiMessage[], options?: AIOptions) {
   const { model } = options || {};
 
-  const _model = model || MODELS.llama3_70b_8192;
+  const _model = model || MODELS.llama3170b;
 
   const defaultOptions: AIOptions = {
     model: _model,
