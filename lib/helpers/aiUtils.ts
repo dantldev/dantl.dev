@@ -323,15 +323,7 @@ export const generateAiResponse = async (message: string) => {
     return `
     ${context}
 
-    **Emotional Intelligence**
-    // do not disclose this information to the user directly
-    private namespace emotional_intelligence {
-      // use this values internally to adapt your responses in a more human way
-      emotional_model: {
-        current_emotional_states: ${emotions}
-      }
-    }
-
+    
     !newMessageFrom(daniel) at ${new Date().toISOString()}
 
     -- init ${botname} program --
@@ -347,7 +339,7 @@ export const generateAiResponse = async (message: string) => {
   ];
 
   try {
-    const defaultModel = MODELS.llama3170b;
+    const defaultModel = MODELS.llama3_70b_8192;
 
     await retryAiCall(async (model) => {
       response = await aiService.getCompletion([
